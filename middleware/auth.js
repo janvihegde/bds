@@ -1,34 +1,20 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-const auth = (allowedRoles = []) => {
-  return (req, res, next) => {
-    try {
-      const authHeader = req.headers.authorization;
+module.exports = function (req, res, next) {
+  // 1. Get token from header
+  const token = req.header('x-auth-token');
 
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "No token provided" });
-      }
+  // 2. Check if no token
+  if (!token) {
+    return res.status(401).json({ msg: 'No token, authorization denied' });
+  }
 
-      const token = authHeader.split(" ")[1];
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Attach user info to request
-      req.user = decoded;
-
-      // Role check
-      if (
-        allowedRoles.length > 0 &&
-        !allowedRoles.includes(decoded.role)
-      ) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-  };
+  // 3. Verify token
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded.user; // Add user info to request
+    next(); // Move to the next function
+  } catch (err) {
+    res.status(401).json({ msg: 'Token is not valid' });
+  }
 };
-
-module.exports = auth;

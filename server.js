@@ -1,79 +1,21 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("./models/User");
+require('dotenv').config();
+const express = require('express');
+const connectDB = require('./config/db');
+const cors = require('cors');
 
-const router = express.Router();
+const app = express();
 
-/**
- * CREATE USER
- */
-router.post("/create-user", async (req, res) => {
-  const { username, password, role } = req.body;
+// 1. Connect Database
+connectDB();
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+// 2. Init Middleware
+app.use(express.json());
+app.use(cors());
 
-    const user = new User({
-      username,
-      password: hashedPassword,
-      role
-    });
+// 3. Define Routes
+app.use('/api/auth', require('./routes/auth'));
+// app.use('/api/products', require('./routes/products')); // Commented out until we create it
 
-    await user.save();
-    res.json({ message: "User created" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+const PORT = process.env.PORT || 5000;
 
-/**
- * LOGIN
- */
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    res.json({
-      token,
-      role: user.role,
-      username: user.username
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-/**
- * TEST ROUTE
- */
-const auth = require("../middleware/auth");
-
-router.get(
-  "/test-dentist",
-  auth(["dentist"]),
-  (req, res) => {
-    res.json({
-      message: "Dentist access granted",
-      user: req.user
-    });
-  }
-);
-
-module.exports = router;
+app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
