@@ -10,9 +10,9 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'collateral_system', // Folder name in Cloudinary
-    allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx'],
-    resource_type: 'auto' // Important for PDFs/Docs
+    folder: 'collateral_system',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx', 'mp4', 'mov'], 
+    resource_type: 'auto' 
   },
 });
 

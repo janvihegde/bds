@@ -1,32 +1,50 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const checkRole = require('../middleware/checkRole');
-const Product = require('../models/Product'); // Ensure you created the Product Model earlier
+const mongoose = require("mongoose");
 
-// DENTIST ONLY: Create Product
-router.post('/', auth, checkRole(['dentist']), async (req, res) => {
-    try {
-        const newProduct = new Product({
-            ...req.body,
-            createdBy: req.user.id
-        });
-        const product = await newProduct.save();
-        res.json(product);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  brand: { type: String, required: true },
+  category: String,
+  description: String,
+
+  status: {
+    type: String,
+    enum: ["new", "designer_uploaded", "pending_approval", "approved", "rejected"],
+    default: "new"
+  },
+
+  rejectionReason: { type: String, default: "" },
+
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+
+  briefs: [
+    {
+      fileName: String,     // Name of file OR Title of link
+      filePath: String,     // Cloudinary URL OR External Link
+      fileType: {           // To tell frontend if it's a file or link
+        type: String, 
+        enum: ['file', 'link'], 
+        default: 'file' 
+      },
+      uploadedAt: { type: Date, default: Date.now }
     }
-});
+  ],
 
-// EVERYONE: Get All Products
-router.get('/', auth, async (req, res) => {
-    try {
-        const products = await Product.find();
-        res.json(products);
-    } catch (err) {
-        res.status(500).send('Server Error');
+  finalDesigns: [
+    {
+      fileName: String,
+      filePath: String,
+      uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      },
+      uploadedAt: { type: Date, default: Date.now }
     }
-});
+  ]
 
-module.exports = router;
+}, { timestamps: true });
+
+module.exports = mongoose.model("Product", productSchema);

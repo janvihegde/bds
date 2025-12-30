@@ -5,16 +5,16 @@ const cors = require('cors');
 
 const app = express();
 
-// 1. Connect Database
+// Connect Database
 connectDB();
 
-// 2. Init Middleware
+// Init Middleware
 app.use(express.json());
 app.use(cors());
 
-// 3. Define Routes
+// Define Routes
 app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/products', require('./routes/products')); // Commented out until we create it
+app.use('/api/products', require('./routes/products')); // <--- This line is critical!
 
 const PORT = process.env.PORT || 5000;
 
